@@ -1,4 +1,51 @@
 #!/usr/bin/make -f
+export DH_VERBOSE=1
+
+# TODO: these must match the arch specified by debuild;
+#       we should confirm this, but we aren't.
+ARCH=arm
+CROSS_COMPILE=arm-linux-gnueabihf-
+
+JOBS=$(shell expr 2 \* $(shell cat /proc/cpuinfo | grep processor | wc -l))
+KARGS=ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -j$(JOBS) V=1
+DESTDIR=debian/linux-overo
+DESTDIR_FW=debian/firmware-overo
+
+# TODO: this isn't used anywhere, because the current version of the
+# kernel's scripts/link-vmlinux.sh doesn't know about it
+export KCONFIG_CONFIG=./config
 
 %:
-	dh $@ 
+	dh $@
+
+override_dh_auto_clean:
+	$(MAKE) $(KARGS) distclean
+	rm -rf $(DESTDIR) $(DESTDIR_FW)
+
+# TODO: when we fix link-vmlinux.sh, get rid of the dotconfig copy
+override_dh_auto_build:
+	cp $(KCONFIG_CONFIG) .config
+	$(MAKE) $(KARGS) oldconfig
+	$(MAKE) $(KARGS) uImage
+	$(MAKE) $(KARGS) zImage
+	$(MAKE) $(KARGS) modules
+	$(MAKE) $(KARGS) dtbs
+
+override_dh_auto_install:
+	mkdir -p $(DESTDIR)/boot
+	cp arch/arm/boot/uImage $(DESTDIR)/boot
+	cp arch/arm/boot/zImage $(DESTDIR)/boot
+	gzip --stdout $(KCONFIG_CONFIG) > $(DESTDIR)/boot/config.gz
+	$(MAKE) $(KARGS) INSTALL_MOD_PATH=$(DESTDIR) modules_install
+	rm -f $(DESTDIR)/lib/modules/*/build $(DESTDIR)/lib/modules/*/source
+	mkdir -p $(DESTDIR)/boot/dtbs
+	find ./arch/arm/boot/ -iname "*.dtb" -exec cp -v '{}' $(DESTDIR)/boot/dtbs/ \;
+	$(MAKE) $(KARGS) INSTALL_FW_PATH=$(DESTDIR_FW)/lib/firmware firmware_install
+
+# TODO: in later kernels, we can install DTBs like this instead:
+#	$(MAKE) $(KARGS) INSTALL_DTBS_PATH=$(DESTDIR)/boot dtbs_install
+
+override_dh_auto_configure:
+override_dh_auto_test:
+	# pass
+

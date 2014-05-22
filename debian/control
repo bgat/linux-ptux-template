@@ -1,12 +1,26 @@
-Source: linux-ptux-template
-Section: unknown
+Source: linux-overo
+Section: kernel
 Priority: extra
-Maintainer: Bill Gatliff <bgat@ptuxvm.billgatliff.com>
-Build-Depends: debhelper (>= 8.0.0)
-Standards-Version: 3.9.3
+Maintainer: Bill Gatliff <bgat@billgatliff.com>
+Build-Depends: debhelper (>= 7.0.50~), module-init-tools
+Standards-Version: 3.9.4
 
-Package: linux-ptux-template
-Architecture: all
+Package: linux-overo
+Architecture: armhf
 Depends: ${misc:Depends}
-Description: <insert up to 60 chars description>
- <insert long description, indented with spaces>
+Description: Linux kernel and modules for the Gumstix Overo
+ The Linux kernel and modules for the Gumstix Overo family of
+ single-board computers.
+ .
+ This package is a part of Pragmatux (http://pragmatux.org).
+
+Package: firmware-overo
+Architecture: armhf
+Depends: ${misc:Depends}
+Description: Firmware blobs for the Gumstix Overo
+ The Linux kernel's firmware blobs for the Gumstix Overo single-board
+ computer.  Contains both the firmware the board itself needs to
+ provide base functionality (if any), plus blobs for devices that can
+ be added to the board by the end user.
+ .
+ This package is a part of Pragmatux (http://pragmatux.org).
